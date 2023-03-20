@@ -25,17 +25,18 @@ func main() {
 		log.Fatal(err)
 	}
 
-	app := WebApp{
+	app := &WebApp{
 		dbModel: &models.UserModel{DB: db},
 	}
 
 	webServer := &http.Server{
 		Addr:         ":5030",
-		Handler:      app.routes(),
+		Handler:      app.Routes(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
+	fmt.Println("server running...")
 	err = webServer.ListenAndServe()
 	log.Fatal(err)
 }
@@ -75,6 +76,7 @@ func dbDSN() (string, error) {
 			return "", errors.New("incomplete database credentials")
 		}
 	}
+
 	dbLogin := fmt.Sprintf("postgres://%v:%v@localhost:5432/%v", hold["HOSTNAME"], hold["PASSWORD"], hold["DBNAME"])
 	return dbLogin, nil
 }

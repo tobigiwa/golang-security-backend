@@ -2,11 +2,12 @@ package main
 
 import "net/http"
 
-func (a *WebApp) routes() http.Handler {
+// routes returns defined routes on the muxtiplexer
+func (a *WebApp) Routes() *http.ServeMux {
 
 	mux := http.NewServeMux()
-
-	mux.HandleFunc("/signup", a.signup)
+	mux.HandleFunc("/", a.Home)
+	mux.HandleFunc("/signup", a.Signup)
 
 	return mux
 
