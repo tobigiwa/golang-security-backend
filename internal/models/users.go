@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -31,4 +32,19 @@ func (m *UserModel) Insert(ctx context.Context, email, username, password string
 		}
 	}
 	return nil
+}
+
+func (m *UserModel) FetchUserByEmail(ctx context.Context, email string) (int, []byte, error) {
+	var id int
+	var hashedPassword []byte
+	stmt := `SELECT id, pswd FROM public.user_moder WHERE emaul = $1`
+	err := m.DB.QueryRow(ctx, stmt, email).Scan(&id, &hashedPassword)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, nil, ErrInvalidCredentials
+		} else {
+			return 0, nil, err
+		}
+	}
+	return id, hashedPassword, nil
 }
