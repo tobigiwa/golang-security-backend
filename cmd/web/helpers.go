@@ -1,12 +1,9 @@
 package main
 
 import (
-	"context"
-	"errors"
 	"net/http"
-	"time"
 
-	"github.com/tobigiwa/golang-security-backend/internal/models"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -30,25 +27,11 @@ func (a *WebApp) generateHashedPassword(password string) ([]byte, error) {
 	return hashedPassword, err
 }
 
-func (a *WebApp) authenticate(email, password string) (int, error) {
+func (a *WebApp) generateNewUUID() string {
+	id := uuid.New()
+	return id.String()
+}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	id, hashedPassword, err := a.dbModel.FetchUserByEmail(ctx, email)
-	if err != nil {
-		if errors.Is(err, models.ErrInvalidCredentials) {
-			return 0, models.ErrInvalidCredentials
-		} else {
-			return 0, err
-		}
-	}
-	err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
-	if err != nil {
-		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-			return 0, models.ErrInvalidCredentials
-		} else {
-			return 0, err
-		}
-	}
-	return id, nil
+func (a *WebApp) authenticate(email, password string) error {
+
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -14,11 +15,13 @@ type UserModel struct {
 	DB *pgxpool.Pool
 }
 
-func (m *UserModel) Insert(ctx context.Context, email, username, password string) error {
+func (m *UserModel) Insert(uuID, email, username, password string) error {
 
-	stmt := `INSERT INTO public.model_user(email, username, pswd, status)
-				VALUES($1, $2, $3, 'good boy')`
-	_, err := m.DB.Exec(ctx, stmt, email, username, password)
+	stmt := `INSERT INTO public.user_tbl(id, email, username, pswd, status)
+				VALUES($1, $2, $3, $4, 'good boy')`
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_, err := m.DB.Exec(ctx, stmt, uuID, email, username, password)
 	if err != nil {
 		var pgxError *pgconn.PgError
 		if errors.As(err, &pgxError) {
@@ -34,17 +37,16 @@ func (m *UserModel) Insert(ctx context.Context, email, username, password string
 	return nil
 }
 
-func (m *UserModel) FetchUserByEmail(ctx context.Context, email string) (int, []byte, error) {
-	var id int
+func (m *UserModel) FetchUserByEmail(ctx context.Context, email string) ([]byte, error) {
 	var hashedPassword []byte
-	stmt := `SELECT id, pswd FROM public.user_moder WHERE emaul = $1`
-	err := m.DB.QueryRow(ctx, stmt, email).Scan(&id, &hashedPassword)
+	stmt := `SELECT pswd FROM public.user_tbl WHERE email = $1`
+	err := m.DB.QueryRow(ctx, stmt, email).Scan(&hashedPassword)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return 0, nil, ErrInvalidCredentials
+			return nil, ErrInvalidCredentials
 		} else {
-			return 0, nil, err
+			return nil, err
 		}
 	}
-	return id, hashedPassword, nil
+	return hashedPassword, nil
 }

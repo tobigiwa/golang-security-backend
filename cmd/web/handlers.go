@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/tobigiwa/golang-security-backend/internal/models"
 )
@@ -13,12 +12,12 @@ import (
 type contextKey int
 
 const (
-	ContextKeyOne contextKey = iota + 1
+	isAuthenticatedContextKey contextKey = iota + 1
 )
 
 func (a *WebApp) Home(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(200)
-	fmt.Fprint(w, "Welcome to the HomePage")
+
+	w.Write([]byte("Welcome to the HomePage, allowed to everyone"))
 }
 
 func (a *WebApp) Signup(w http.ResponseWriter, r *http.Request) {
@@ -42,10 +41,12 @@ func (a *WebApp) Signup(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
+	uuID := a.generateNewUUID()
+	if uuID == "" {
+		uuID = a.generateNewUUID()
+	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	err = a.dbModel.Insert(ctx, email, username, string(hashedPassword))
+	err = a.dbModel.Insert(uuID, email, username, string(hashedPassword))
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateEmail) {
 			a.clientError(w, http.StatusConflict)
@@ -60,34 +61,27 @@ func (a *WebApp) Signup(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	fmt.Fprintln(w, "INSERT WAS SUCCESSFUL")
+	w.Write([]byte("INSERT WAS SUCCESSFUL"))
 
 }
 
 func (a *WebApp) Login(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)
-		w.Header().Add("Content-Type", "application/json")
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
-		return
-	}
-
-	err := r.ParseForm()
-	if err != nil {
-		a.clientError(w, http.StatusBadRequest)
-		return
-	}
-	email, password := r.PostForm.Get("email"), r.PostForm.Get("password")
-	id, err := a.authenticate(email, password)
+	
 	if err != nil {
 		if errors.Is(err, models.ErrInvalidCredentials) {
 			a.clientError(w, http.StatusForbidden)
+			return
 		} else {
 			a.undefinedError(w, err.Error())
+			return
 		}
 	}
-	ctx := context.WithValue(r.Context(), ContextKeyOne, id)
+	ctx := context.WithValue(r.Context(), isAuthenticatedContextKey, true)
 	r = r.WithContext(ctx)
 	http.Redirect(w, r, "/welcome", http.StatusSeeOther)
+}
 
+func (a *WebApp) Welcome(w http.ResponseWriter, r *http.Request) {
+
+	w.Write([]byte("WELCOME"))
 }

@@ -8,7 +8,11 @@ func (a *WebApp) Routes() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", a.Home)
 	mux.HandleFunc("/signup", a.Signup)
+	mux.HandleFunc("/login", a.Login)
+	mux.HandleFunc("/welcome", a.isAuthenticated(a.Welcome))
 
 	return mux
 
 }
+
+
