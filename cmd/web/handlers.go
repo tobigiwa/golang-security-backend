@@ -1,18 +1,10 @@
 package main
 
 import (
-	"context"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/tobigiwa/golang-security-backend/internal/models"
-)
-
-type contextKey int
-
-const (
-	isAuthenticatedContextKey contextKey = iota + 1
 )
 
 func (a *WebApp) Home(w http.ResponseWriter, r *http.Request) {
@@ -30,55 +22,45 @@ func (a *WebApp) Signup(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()
 	if err != nil {
-		a.clientError(w, http.StatusBadRequest)
+		a.clientError(w, http.StatusBadRequest, "invalid form data")
 		return
 	}
 
 	email, username, password := r.PostForm.Get("email"), r.PostForm.Get("username"), r.PostForm.Get("password")
+	if email == "" || password == "" || username == "" {
+		a.clientError(w, http.StatusBadRequest, "incomplete form data")
+		return
+	}
+
 	hashedPassword, err := a.generateHashedPassword(password)
 	if err != nil {
-		a.clientError(w, http.StatusUnsupportedMediaType)
+		a.clientError(w, http.StatusUnsupportedMediaType, "password is of incorrect type")
 		w.Write([]byte(err.Error()))
 		return
 	}
-	uuID := a.generateNewUUID()
-	if uuID == "" {
-		uuID = a.generateNewUUID()
-	}
 
-	err = a.dbModel.Insert(uuID, email, username, string(hashedPassword))
+	err = a.dbModel.Insert(email, username, string(hashedPassword))
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateEmail) {
-			a.clientError(w, http.StatusConflict)
-			fmt.Fprintln(w, "Email already already infmt.Fprintf(w, ) use")
+			a.clientError(w, http.StatusConflict, "Email already used")
 			return
 		} else if errors.Is(err, models.ErrDuplicateUsername) {
-			a.clientError(w, http.StatusConflict)
-			fmt.Fprintln(w, "Username already already in use")
+			a.clientError(w, http.StatusConflict, "Username already used")
 			return
 		} else {
 			a.undefinedError(w, err.Error())
 			return
 		}
 	}
-	w.Write([]byte("INSERT WAS SUCCESSFUL"))
+	w.Write([]byte("Signup SUCCESSFUL"))
+	// http.Redirect(w, r, "/login", http.StatusSeeOther)
 
 }
 
 func (a *WebApp) Login(w http.ResponseWriter, r *http.Request) {
-	
-	if err != nil {
-		if errors.Is(err, models.ErrInvalidCredentials) {
-			a.clientError(w, http.StatusForbidden)
-			return
-		} else {
-			a.undefinedError(w, err.Error())
-			return
-		}
-	}
-	ctx := context.WithValue(r.Context(), isAuthenticatedContextKey, true)
-	r = r.WithContext(ctx)
-	http.Redirect(w, r, "/welcome", http.StatusSeeOther)
+
+	w.Write([]byte("Login SUCCESSFUL"))
+	// http.Redirect(w, r, "/welcome", http.StatusSeeOther)
 }
 
 func (a *WebApp) Welcome(w http.ResponseWriter, r *http.Request) {
