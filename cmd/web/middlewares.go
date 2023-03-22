@@ -24,7 +24,7 @@ func (a *WebApp) authenticationBackend(next http.HandlerFunc) http.HandlerFunc {
 		}
 		err := r.ParseForm()
 		if err != nil {
-			a.clientError(w, http.StatusBadRequest, "inalid form data")
+			a.clientError(w, http.StatusBadRequest, "invalid form data")
 			return
 		}
 		email, password := r.PostForm.Get("email"), r.PostForm.Get("password")
