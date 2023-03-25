@@ -16,6 +16,7 @@ import (
 
 type WebApp struct {
 	dbModel *models.UserModel
+	
 }
 
 func main() {

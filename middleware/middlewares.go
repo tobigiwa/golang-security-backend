@@ -1,4 +1,4 @@
-package main
+package middleware
 
 import (
 	"context"
@@ -14,7 +14,9 @@ const (
 	isAuthenticatedContextKey contextKey = iota + 1
 )
 
-func (a *WebApp) authenticationBackend(next http.HandlerFunc) http.HandlerFunc {
+type Middlewares func(http.HandlerFunc) http.HandlerFunc
+
+func authenticationBackend(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.Header().Set("Allow", http.MethodPost)
