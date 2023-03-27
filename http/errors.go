@@ -1,4 +1,4 @@
-package main
+package http
 
 import (
 	"errors"
@@ -11,10 +11,10 @@ var (
 	errInvalidCredentials = errors.New("invalid credentials")
 )
 
-func (a *WebApp) clientError(w http.ResponseWriter, httpStatus int, text string) {
+func (a *WebApp) ClientError(w http.ResponseWriter, httpStatus int, text string) {
 	http.Error(w, text, httpStatus)
 }
 
-func (a *WebApp) serverError(w http.ResponseWriter, text string) {
+func (a *WebApp) ServerError(w http.ResponseWriter, text string) {
 	http.Error(w, text, http.StatusInternalServerError)
 }
