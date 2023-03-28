@@ -5,13 +5,15 @@ import (
 	"errors"
 	"time"
 
-	"github.com/tobigiwa/golang-security-backend/internal/models"
+	"github.com/tobigiwa/golang-security-backend/internal/store"
+	"github.com/tobigiwa/golang-security-backend/pkg/logging"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // Webpp is application struct
 type WebApp struct {
-	DbModel *models.UserModel
+	DbModel *store.UserModel
+	logger  *logging.Logger
 }
 
 func (a *WebApp) generateHashedPassword(password string) ([]byte, error) {

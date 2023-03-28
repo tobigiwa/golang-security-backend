@@ -7,18 +7,19 @@ import (
 	"time"
 
 	app "github.com/tobigiwa/golang-security-backend/http"
-	"github.com/tobigiwa/golang-security-backend/internal/models"
+	"github.com/tobigiwa/golang-security-backend/internal/store"
 )
 
 func main() {
 
-	db, err := models.DbSetUp()
+	db, err := store.DbSetUp()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	application := &app.WebApp{
-		DbModel: &models.UserModel{DB: db},
+		DbModel: &store.UserModel{DB: db},
+		
 	}
 
 	webServer := &http.Server{
