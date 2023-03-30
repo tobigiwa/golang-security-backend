@@ -18,3 +18,4 @@ func (a *WebApp) ClientError(w http.ResponseWriter, httpStatus int, text string)
 func (a *WebApp) ServerError(w http.ResponseWriter, text string) {
 	http.Error(w, text, http.StatusInternalServerError)
 }
+

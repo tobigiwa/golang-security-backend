@@ -11,12 +11,8 @@ func (a *WebApp) Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *WebApp) Signup(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)
-		w.Header().Add("Content-Type", "application/json")
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
-		return
-	}
+
+	a.CheckRouteMethod(w, r, http.MethodPost)
 
 	err := r.ParseForm()
 	if err != nil {
@@ -32,8 +28,7 @@ func (a *WebApp) Signup(w http.ResponseWriter, r *http.Request) {
 
 	hashedPassword, err := a.generateHashedPassword(password)
 	if err != nil {
-		a.ClientError(w, http.StatusUnsupportedMediaType, "password is of incorrect type")
-		w.Write([]byte(err.Error()))
+		a.ClientError(w, http.StatusUnsupportedMediaType, "password is of incorrect type: "+err.Error())
 		return
 	}
 
@@ -46,12 +41,13 @@ func (a *WebApp) Signup(w http.ResponseWriter, r *http.Request) {
 			a.ClientError(w, http.StatusConflict, "Username already used")
 			return
 		} else {
+			a.Logger.LogError(err, "APP")
 			a.ServerError(w, err.Error())
 			return
 		}
 	}
-	w.Write([]byte("Signup SUCCESSFUL"))
-	// http.Redirect(w, r, "/login", http.StatusSeeOther)
+	w.Write([]byt   e("Signup SUCCESSFUL"))
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 
 }
 

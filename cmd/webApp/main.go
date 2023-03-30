@@ -1,25 +1,36 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	app "github.com/tobigiwa/golang-security-backend/http"
 	"github.com/tobigiwa/golang-security-backend/internal/store"
+	"github.com/tobigiwa/golang-security-backend/pkg/logging"
 )
 
 func main() {
 
-	db, err := store.DbSetUp()
+	db, err := store.New()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	logger, err := logging.NewLogger(logging.LevelError)
+	if err != nil {
+		var pathError *os.PathError
+		if errors.As(err, &pathError) {
+			log.Fatal("Incorrect file path for Log")
+		}
+	}
+
 	application := &app.WebApp{
-		DbModel: &store.UserModel{DB: db},
-		
+		DbModel: &store.UserModel{DB: db, Logger: logger},
+		Logger:  logger,
 	}
 
 	webServer := &http.Server{

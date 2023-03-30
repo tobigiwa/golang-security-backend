@@ -9,10 +9,31 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/tobigiwa/golang-security-backend/pkg/logging"
 )
 
 type UserModel struct {
-	DB *pgxpool.Pool
+	DB     *pgxpool.Pool
+	Logger *logging.Logger
+}
+
+func New() (*pgxpool.Pool, error) {
+	databaseURL, err := dbDSN()
+	if err != nil {
+		return nil, err
+	}
+	db, err := pgxpool.New(context.Background(), databaseURL)
+	if err != nil {
+		return nil, err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := db.Ping(ctx); err != nil {
+		return nil, err
+	}
+	// db.SetMaxOpenConns(20)
+	// db.SetMaxIdleConns(10)
+	return db, nil
 }
 
 func (m *UserModel) Insert(email, username, password string) error {
@@ -30,6 +51,7 @@ func (m *UserModel) Insert(email, username, password string) error {
 			} else if pgxError.Code == "23505" && strings.Contains(pgxError.Detail, username) {
 				return ErrDuplicateUsername
 			} else {
+				m.Logger.LogError(err, "DB")
 				return err
 			}
 		}
@@ -45,6 +67,7 @@ func (m *UserModel) FetchUserByEmail(ctx context.Context, email string) ([]byte,
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrInvalidCredentials
 		} else {
+			m.Logger.LogError(err, "DB")
 			return nil, err
 		}
 	}

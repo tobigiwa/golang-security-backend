@@ -12,56 +12,39 @@ const (
 	isAuthenticatedContextKey contextKey = iota + 1
 )
 
-type Application interface {
-	Authenticate(email, password string) error
-	ClientError(w http.ResponseWriter, httpStatus int, text string)
-	ServerError(w http.ResponseWriter, text string)
-}
+func (a *WebApp) authenticationBackend(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		a.CheckRouteMethod(w, r, http.MethodPost)
 
-func authenticationBackend(a Application) func(next http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		err := r.ParseForm()
+		if err != nil {
+			a.ClientError(w, http.StatusBadRequest, "invalid form data")
+			return
+		}
 
-			if r.Method != http.MethodPost {
-				w.Header().Set("Allow", http.MethodPost)
-				w.Header().Add("Content-Type", "application/json")
-				http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		email, password := r.PostForm.Get("email"), r.PostForm.Get("password")
+		if email == "" || password == "" {
+			a.ClientError(w, http.StatusBadRequest, "incomplete form data")
+			return
+		}
+
+		err = a.Authenticate(email, password)
+		if err != nil {
+			if errors.Is(err, errInvalidCredentials) {
+				a.ClientError(w, http.StatusForbidden, http.StatusText(http.StatusForbidden))
+				return
+			} else {
+				a.ServerError(w, err.Error())
 				return
 			}
+		}
 
-			err := r.ParseForm()
+		ctx := context.WithValue(r.Context(), isAuthenticatedContextKey, true)
+		r = r.WithContext(ctx)
 
-			if err != nil {
-				a.ClientError(w, http.StatusBadRequest, "invalid form data")
-				return
-			}
 
-			email, password := r.PostForm.Get("email"), r.PostForm.Get("password")
-
-			if email == "" || password == "" {
-				a.ClientError(w, http.StatusBadRequest, "incomplete form data")
-				return
-			}
-
-			err = a.Authenticate(email, password)
-
-			if err != nil {
-				if errors.Is(err, errInvalidCredentials) {
-					a.ClientError(w, http.StatusForbidden, http.StatusText(http.StatusForbidden))
-					return
-				} else {
-					a.ServerError(w, err.Error())
-					return
-				}
-			}
-
-			ctx := context.WithValue(r.Context(), isAuthenticatedContextKey, true)
-			r = r.WithContext(ctx)
-
-			next.ServeHTTP(w, r)
-		})
-
-	}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // func isAuthenticated(next http.HandlerFunc) http.HandlerFunc {
