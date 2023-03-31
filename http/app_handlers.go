@@ -6,32 +6,26 @@ import (
 )
 
 func (a *WebApp) Home(w http.ResponseWriter, r *http.Request) {
-
 	w.Write([]byte("Welcome to the HomePage, allowed to everyone"))
 }
 
 func (a *WebApp) Signup(w http.ResponseWriter, r *http.Request) {
-
 	a.CheckRouteMethod(w, r, http.MethodPost)
-
 	err := r.ParseForm()
 	if err != nil {
 		a.ClientError(w, http.StatusBadRequest, "invalid form data")
 		return
 	}
-
 	email, username, password := r.PostForm.Get("email"), r.PostForm.Get("username"), r.PostForm.Get("password")
 	if email == "" || password == "" || username == "" {
 		a.ClientError(w, http.StatusBadRequest, "incomplete form data")
 		return
 	}
-
 	hashedPassword, err := a.generateHashedPassword(password)
 	if err != nil {
 		a.ClientError(w, http.StatusUnsupportedMediaType, "password is of incorrect type: "+err.Error())
 		return
 	}
-
 	err = a.DbModel.Insert(email, username, string(hashedPassword))
 	if err != nil {
 		if errors.Is(err, errDuplicateEmail) {
@@ -46,9 +40,8 @@ func (a *WebApp) Signup(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	w.Write([]byt   e("Signup SUCCESSFUL"))
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
-
+	w.Write([]byte("Signup SUCCESSFUL"))
+	// http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func (a *WebApp) Login(w http.ResponseWriter, r *http.Request) {

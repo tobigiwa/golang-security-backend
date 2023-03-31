@@ -19,20 +19,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	logger, err := logging.NewLogger(logging.LevelError)
+	logger, err := logging.NewLogger()
 	if err != nil {
 		var pathError *os.PathError
 		if errors.As(err, &pathError) {
 			log.Fatal("Incorrect file path for Log")
 		}
 	}
-
 	application := &app.WebApp{
 		DbModel: &store.UserModel{DB: db, Logger: logger},
 		Logger:  logger,
 	}
-
 	webServer := &http.Server{
 		Addr:         ":5030",
 		Handler:      application.Routes(),
@@ -40,8 +37,8 @@ func main() {
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
-
 	fmt.Println("server running...")
+	application.Logger.LogInfo("SERVER IS RUNNING", "APP")
 	err = webServer.ListenAndServe()
 	log.Fatal(err)
 }

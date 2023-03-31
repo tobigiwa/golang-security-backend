@@ -2,6 +2,7 @@ package logging
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"runtime/debug"
 	"sync"
@@ -30,34 +31,36 @@ func (l LogLevel) String() string {
 }
 
 type Logger struct {
-	out      *os.File
+	Out      *os.File
 	minLevel LogLevel
 	mu       sync.RWMutex
 }
 
 func makeLogFile() (*os.File, error) {
-	logFile, err := os.OpenFile("LOGS/log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	logFile, err := os.OpenFile("LOG.logs", os.O_APPEND|os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
+		fmt.Println("something about the file", err)
 		return nil, err
 	}
-	defer logFile.Close()
+	// defer logFile.Close()
 	return logFile, nil
 }
 
-func NewLogger(minLevel LogLevel) (*Logger, error) {
+func NewLogger() (*Logger, error) {
 	output, err := makeLogFile()
 	if err != nil {
 		return nil, err
 	}
 	return &Logger{
-		out:      output,
-		minLevel: minLevel,
+		Out:      output,
+		minLevel: LevelInfo,
 	}, nil
 
 }
 
 func (l *Logger) LogInfo(message, source string) {
 	l.print(LevelInfo, message, source)
+	fmt.Println("word to logger")
 }
 
 func (l *Logger) LogError(err error, source string) {
@@ -69,11 +72,7 @@ func (l *Logger) LogFatal(err error, source string) {
 	os.Exit(1)
 }
 
-func (l *Logger) print(level LogLevel, message, source string) (int, error) {
-	if level < l.minLevel {
-		return 0, nil
-	}
-
+func (l *Logger) print(level LogLevel, message, source string) {
 	temp := struct {
 		Level   string `json:"level"`
 		Source  string `json:"sorce"`
@@ -88,21 +87,22 @@ func (l *Logger) print(level LogLevel, message, source string) (int, error) {
 	if level >= LevelError {
 		temp.Trace = string(debug.Stack())
 	}
-
 	var report []byte
-
 	report, err := json.Marshal(temp)
 	if err != nil {
 		report = []byte(LevelError.String() + ": unable to marshal log message: " + err.Error())
 	}
-
 	l.mu.RLock()
 	defer l.mu.RUnlock()
-
-	return l.out.Write(append(report, '\n'))
+	a, err := l.Out.Write(append(report, '\n'))
+	if err != nil {
+		fmt.Println("writing bad----------", err)
+		return
+	}
+	fmt.Print("int is----- ", a)
 
 }
 
-func (l *Logger) Write(message []byte) (int, error) {
-	return l.print(LevelError, string(message), "LOGEER")
+func (l *Logger) Write(message []byte) {
+	l.print(LevelError, string(message), "LOGEER")
 }

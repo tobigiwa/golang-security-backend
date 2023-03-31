@@ -59,17 +59,18 @@ func (m *UserModel) Insert(email, username, password string) error {
 	return nil
 }
 
-func (m *UserModel) FetchUserByEmail(ctx context.Context, email string) ([]byte, error) {
+func (m *UserModel) FetchUserByEmail(ctx context.Context, email string) ([]byte, string, error) {
 	var hashedPassword []byte
-	stmt := `SELECT pswd FROM public.user_tbl WHERE email = $1`
-	err := m.DB.QueryRow(ctx, stmt, email).Scan(&hashedPassword)
+	var status string
+	stmt := `SELECT pswd, status FROM public.user_tbl WHERE email = $1`
+	err := m.DB.QueryRow(ctx, stmt, email).Scan(&hashedPassword, &status)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrInvalidCredentials
+			return nil, "", ErrInvalidCredentials
 		} else {
 			m.Logger.LogError(err, "DB")
-			return nil, err
+			return nil,"", err
 		}
 	}
-	return hashedPassword, nil
+	return hashedPassword, status,  nil
 }
