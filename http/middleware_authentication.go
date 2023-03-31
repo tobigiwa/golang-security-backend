@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	cookiePackage "github.com/tobigiwa/golang-security-backend/http/cookies"
+	"github.com/tobigiwa/golang-security-backend/internal/store"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -26,7 +26,7 @@ func (a *WebApp) authenticationBackend(next http.Handler) http.Handler {
 			a.ClientError(w, http.StatusBadRequest, "incomplete form data")
 			return
 		}
-		status, err := a.Authenticate(email, password)
+		user, err := a.Authenticate(email, password)
 		if err != nil {
 			if errors.Is(err, errInvalidCredentials) {
 				a.ClientError(w, http.StatusForbidden, http.StatusText(http.StatusForbidden))
@@ -37,32 +37,32 @@ func (a *WebApp) authenticationBackend(next http.Handler) http.Handler {
 			}
 		}
 
-		a.CreateCookie(w, status)
-		fmt.Print()
+		response := a.SerializeUserModel(&user)
+		a.CreateCookie(w, response.String())
 		next.ServeHTTP(w, r)
 	})
 }
 
-func (a *WebApp) Authenticate(email, password string) (string, error) {
+func (a *WebApp) Authenticate(email, password string) (store.UserModel, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	hashedPassword, status, err := a.DbModel.FetchUserByEmail(ctx, email)
+	user, err := a.Store.FetchUserByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, errInvalidCredentials) {
-			return "", errInvalidCredentials
+			return store.UserModel{}, errInvalidCredentials
 		} else {
-			return "", err
+			return store.UserModel{}, err
 		}
 	}
-	err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
+	err = bcrypt.CompareHashAndPassword(user.Password, []byte(password))
 	if err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-			return "", errInvalidCredentials
+			return store.UserModel{}, errInvalidCredentials
 		} else {
-			return "", err
+			return store.UserModel{}, err
 		}
 	}
-	return status, nil
+	return user, nil
 
 }
 

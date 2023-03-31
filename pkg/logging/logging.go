@@ -75,7 +75,7 @@ func (l *Logger) LogFatal(err error, source string) {
 func (l *Logger) print(level LogLevel, message, source string) {
 	temp := struct {
 		Level   string `json:"level"`
-		Source  string `json:"sorce"`
+		Source  string `json:"source"`
 		Time    string `json:"time"`
 		Message string `json:"message"`
 		Trace   string `json:"trace,omitempty"`

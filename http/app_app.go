@@ -15,8 +15,8 @@ import (
 
 // Webpp is application struct
 type WebApp struct {
-	DbModel *store.UserModel
-	Logger  *logging.Logger
+	Store  *store.Store
+	Logger *logging.Logger
 }
 
 func (a *WebApp) generateHashedPassword(password string) ([]byte, error) {

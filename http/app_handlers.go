@@ -26,7 +26,7 @@ func (a *WebApp) Signup(w http.ResponseWriter, r *http.Request) {
 		a.ClientError(w, http.StatusUnsupportedMediaType, "password is of incorrect type: "+err.Error())
 		return
 	}
-	err = a.DbModel.Insert(email, username, string(hashedPassword))
+	err = a.Store.Insert(email, username, string(hashedPassword))
 	if err != nil {
 		if errors.Is(err, errDuplicateEmail) {
 			a.ClientError(w, http.StatusConflict, "Email already used")
@@ -41,13 +41,13 @@ func (a *WebApp) Signup(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Write([]byte("Signup SUCCESSFUL"))
-	// http.Redirect(w, r, "/login", http.StatusSeeOther)
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func (a *WebApp) Login(w http.ResponseWriter, r *http.Request) {
 
 	w.Write([]byte("Login SUCCESSFUL"))
-	// http.Redirect(w, r, "/welcome", http.StatusSeeOther)
+	http.Redirect(w, r, "/welcome", http.StatusSeeOther)
 }
 
 func (a *WebApp) Welcome(w http.ResponseWriter, r *http.Request) {

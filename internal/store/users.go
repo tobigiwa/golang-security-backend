@@ -13,6 +13,13 @@ import (
 )
 
 type UserModel struct {
+	Email    string
+	Username string
+	Password []byte
+	Status   string
+}
+
+type Store struct {
 	DB     *pgxpool.Pool
 	Logger *logging.Logger
 }
@@ -36,13 +43,12 @@ func New() (*pgxpool.Pool, error) {
 	return db, nil
 }
 
-func (m *UserModel) Insert(email, username, password string) error {
-
+func (s *Store) Insert(email, username, password string) error {
 	stmt := `INSERT INTO public.user_tbl(email, username, pswd, status)
 				VALUES($1, $2, $3, 'public_user')`
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	_, err := m.DB.Exec(ctx, stmt, email, username, password)
+	_, err := s.DB.Exec(ctx, stmt, email, username, password)
 	if err != nil {
 		var pgxError *pgconn.PgError
 		if errors.As(err, &pgxError) {
@@ -51,7 +57,7 @@ func (m *UserModel) Insert(email, username, password string) error {
 			} else if pgxError.Code == "23505" && strings.Contains(pgxError.Detail, username) {
 				return ErrDuplicateUsername
 			} else {
-				m.Logger.LogError(err, "DB")
+				s.Logger.LogError(err, "DB")
 				return err
 			}
 		}
@@ -59,18 +65,27 @@ func (m *UserModel) Insert(email, username, password string) error {
 	return nil
 }
 
-func (m *UserModel) FetchUserByEmail(ctx context.Context, email string) ([]byte, string, error) {
+func (s *Store) FetchUserByEmail(ctx context.Context, email string) (UserModel, error) {
 	var hashedPassword []byte
-	var status string
-	stmt := `SELECT pswd, status FROM public.user_tbl WHERE email = $1`
-	err := m.DB.QueryRow(ctx, stmt, email).Scan(&hashedPassword, &status)
+	var (
+		username, status string
+	)
+	stmt := `SELECT username, pswd, status FROM public.user_tbl WHERE email = $1`
+	err := s.DB.QueryRow(ctx, stmt, email).Scan(&username, &hashedPassword, &status)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, "", ErrInvalidCredentials
+			return UserModel{}, ErrInvalidCredentials
 		} else {
-			m.Logger.LogError(err, "DB")
-			return nil,"", err
+			s.Logger.LogError(err, "DB")
+			return UserModel{}, err
 		}
 	}
-	return hashedPassword, status,  nil
+	user := UserModel{
+		Email:    email,
+		Username: username,
+		Password: hashedPassword,
+		Status:   status,
+	}
+
+	return user, nil
 }
