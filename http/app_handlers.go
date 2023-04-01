@@ -10,7 +10,9 @@ func (a *WebApp) Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *WebApp) Signup(w http.ResponseWriter, r *http.Request) {
-	a.CheckRouteMethod(w, r, http.MethodPost)
+	if !a.CheckRouteMethod(w, r, []string{http.MethodPost}) {
+		return
+	}
 	err := r.ParseForm()
 	if err != nil {
 		a.ClientError(w, http.StatusBadRequest, "invalid form data")
@@ -41,16 +43,16 @@ func (a *WebApp) Signup(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Write([]byte("Signup SUCCESSFUL"))
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
+	// http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func (a *WebApp) Login(w http.ResponseWriter, r *http.Request) {
 
 	w.Write([]byte("Login SUCCESSFUL"))
-	http.Redirect(w, r, "/welcome", http.StatusSeeOther)
+	// http.Redirect(w, r, "/welcome", http.StatusSeeOther)
 }
 
 func (a *WebApp) Welcome(w http.ResponseWriter, r *http.Request) {
 
-	w.Write([]byte("WELCOME"))
+	w.Write([]byte("WELCOME TO AUTHORIZED PAGE"))
 }

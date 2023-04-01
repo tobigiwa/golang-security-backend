@@ -15,7 +15,9 @@ import (
 
 func (a *WebApp) authenticationBackend(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		a.CheckRouteMethod(w, r, http.MethodPost)
+		if !a.CheckRouteMethod(w, r, []string{http.MethodPost}) {
+			return
+		}
 		err := r.ParseForm()
 		if err != nil {
 			a.ClientError(w, http.StatusBadRequest, "invalid form data")

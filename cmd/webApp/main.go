@@ -27,12 +27,13 @@ func main() {
 		}
 	}
 	application := &app.WebApp{
-		Store: &store.Store{DB: db, Logger: logger},
-		Logger:  logger,
+		Store:  &store.Store{DB: db, Logger: logger},
+		Logger: logger,
 	}
 	webServer := &http.Server{
 		Addr:         ":5030",
 		Handler:      application.Routes(),
+		ErrorLog:     log.New(logger, "", 0),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,

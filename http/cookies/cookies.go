@@ -53,8 +53,8 @@ func WriteEncryptCookie(w http.ResponseWriter, cookie http.Cookie, secretKey []b
 	if err != nil {
 		return err
 	}
-	text := fmt.Sprintf("%s:%s", cookie.Name, cookie.Value)
-	encryptValue := aseGCM.Seal(nonce, nonce, []byte(text), nil)
+	plaintext := fmt.Sprintf("%s:%s", cookie.Name, cookie.Value)
+	encryptValue := aseGCM.Seal(nonce, nonce, []byte(plaintext), nil)
 	cookie.Value = string(encryptValue)
 
 	return EncodeCookieValue(w, cookie)

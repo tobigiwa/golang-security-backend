@@ -59,20 +59,19 @@ func NewLogger() (*Logger, error) {
 }
 
 func (l *Logger) LogInfo(message, source string) {
-	l.print(LevelInfo, message, source)
-	fmt.Println("word to logger")
+	l.log(LevelInfo, message, source)
 }
 
 func (l *Logger) LogError(err error, source string) {
-	l.print(LevelError, err.Error(), source)
+	l.log(LevelError, err.Error(), source)
 }
 
 func (l *Logger) LogFatal(err error, source string) {
-	l.print(LevelFatal, err.Error(), source)
+	l.log(LevelFatal, err.Error(), source)
 	os.Exit(1)
 }
 
-func (l *Logger) print(level LogLevel, message, source string) {
+func (l *Logger) log(level LogLevel, message, source string) (int, error) {
 	temp := struct {
 		Level   string `json:"level"`
 		Source  string `json:"source"`
@@ -82,6 +81,7 @@ func (l *Logger) print(level LogLevel, message, source string) {
 	}{
 		Level:   level.String(),
 		Time:    time.Now().UTC().Format(time.RFC3339),
+		Source:  source,
 		Message: message,
 	}
 	if level >= LevelError {
@@ -94,15 +94,10 @@ func (l *Logger) print(level LogLevel, message, source string) {
 	}
 	l.mu.RLock()
 	defer l.mu.RUnlock()
-	a, err := l.Out.Write(append(report, '\n'))
-	if err != nil {
-		fmt.Println("writing bad----------", err)
-		return
-	}
-	fmt.Print("int is----- ", a)
+	return l.Out.Write(append(report, '\n'))
 
 }
 
-func (l *Logger) Write(message []byte) {
-	l.print(LevelError, string(message), "LOGEER")
+func (l *Logger) Write(message []byte) (n int, err error) {
+	return l.log(LevelError, string(message), "LOGEER")
 }

@@ -28,8 +28,8 @@ func (a *WebApp) SerializeUserModel(user *store.UserModel) bytes.Buffer {
 	return buf
 }
 
-func (a *WebApp) DeserializeUserModel(str string) store.UserModel {
-	var user store.UserModel
+func (a *WebApp) DeserializeUserModel(str string) UserResponseModel {
+	var user UserResponseModel
 
 	reader := strings.NewReader(str)
 	err := gob.NewDecoder(reader).Decode(&user)
