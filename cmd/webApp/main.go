@@ -15,7 +15,7 @@ import (
 
 func main() {
 
-	db, err := store.New()
+	db, err := store.NewDatabaseConn()
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -12,9 +12,10 @@ func (a *WebApp) Routes() http.Handler {
 
 	mux.HandleFunc("/", a.Home)
 	mux.HandleFunc("/signup", a.Signup)
-	mux.Handle("/login", a.authenticationBackend(Login))
+	mux.Handle("/login", a.httpMethod(http.MethodPost, a.authenticationBackend(Login)))
 	mux.Handle("/welcome", a.AuthorizationBackend(Welcome))
 
 	return a.recoverPanic(mux)
 
 }
+
