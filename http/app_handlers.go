@@ -10,9 +10,7 @@ func (a *WebApp) Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *WebApp) Signup(w http.ResponseWriter, r *http.Request) {
-	if !a.CheckRouteMethod(w, r, []string{http.MethodPost}) {
-		return
-	}
+
 	err := r.ParseForm()
 	if err != nil {
 		a.ClientError(w, http.StatusBadRequest, "invalid form data")
@@ -28,7 +26,7 @@ func (a *WebApp) Signup(w http.ResponseWriter, r *http.Request) {
 		a.ClientError(w, http.StatusUnsupportedMediaType, "password is of incorrect type: "+err.Error())
 		return
 	}
-	err = a.Store.Insert(email, username, string(hashedPassword))
+	err = a.Store.InsertUser(email, username, string(hashedPassword))
 	if err != nil {
 		if errors.Is(err, errDuplicateEmail) {
 			a.ClientError(w, http.StatusConflict, "Email already used")

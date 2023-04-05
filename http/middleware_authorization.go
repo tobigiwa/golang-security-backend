@@ -14,10 +14,6 @@ import (
 func (a *WebApp) AuthorizationBackend(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		if !a.CheckRouteMethod(w, r, []string{http.MethodGet, http.MethodPost}) {
-			return
-		}
-
 		cookie, _ := r.Cookie("llll")
 		cookie.Valid()
 		value := a.CheckCookie(w, r, "llll")

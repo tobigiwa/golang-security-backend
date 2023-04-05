@@ -21,3 +21,8 @@ func (u *UserModel) validate_password(email, password string) error {
 		return err
 	}
 }
+
+func (u *UserModel) generateHashedPassword(password string) ([]byte, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 15)
+	return hashedPassword, err
+}

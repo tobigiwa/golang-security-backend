@@ -27,7 +27,7 @@ func main() {
 		}
 	}
 	application := &app.WebApp{
-		Store:  &store.Store{DB: db, Logger: logger},
+		Store:  &store.Store{DB: db, Logger: logger, User: &store.UserModel{}},
 		Logger: logger,
 	}
 	webServer := &http.Server{
