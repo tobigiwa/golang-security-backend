@@ -3,6 +3,8 @@ package http
 import (
 	"errors"
 	"net/http"
+
+	"github.com/tobigiwa/golang-security-backend/internal/store"
 )
 
 func (a *WebApp) Home(w http.ResponseWriter, r *http.Request) {
@@ -21,17 +23,12 @@ func (a *WebApp) Signup(w http.ResponseWriter, r *http.Request) {
 		a.ClientError(w, http.StatusBadRequest, "incomplete form data")
 		return
 	}
-	hashedPassword, err := a.generateHashedPassword(password)
+	err = a.Store.CreateUser(email, username, password)
 	if err != nil {
-		a.ClientError(w, http.StatusUnsupportedMediaType, "password is of incorrect type: "+err.Error())
-		return
-	}
-	err = a.Store.InsertUser(email, username, string(hashedPassword))
-	if err != nil {
-		if errors.Is(err, errDuplicateEmail) {
+		if errors.Is(err, store.ErrDuplicateEmail) {
 			a.ClientError(w, http.StatusConflict, "Email already used")
 			return
-		} else if errors.Is(err, errDuplicateUsername) {
+		} else if errors.Is(err, store.ErrDuplicateUsername) {
 			a.ClientError(w, http.StatusConflict, "Username already used")
 			return
 		} else {

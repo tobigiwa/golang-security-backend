@@ -19,11 +19,11 @@ func (a *WebApp) SerializeUserModel(user *store.UserModel) bytes.Buffer {
 	response := UserResponseModel{
 		Email:    user.Email,
 		Username: user.Username,
-		Status:   user.Status,
+		Status:   user.Role,
 	}
 	err := gob.NewEncoder(&buf).Encode(&response)
 	if err != nil {
-		a.Logger.LogError(err, "DB")
+		a.Logger.LogError(err, "APP")
 	}
 	return buf
 }

@@ -10,7 +10,7 @@ import (
 
 	app "github.com/tobigiwa/golang-security-backend/http"
 	"github.com/tobigiwa/golang-security-backend/internal/store"
-	"github.com/tobigiwa/golang-security-backend/pkg/logging"
+	"github.com/tobigiwa/golang-security-backend/logging"
 )
 
 func main() {

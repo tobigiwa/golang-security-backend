@@ -2,7 +2,7 @@ package http
 
 import (
 	"github.com/tobigiwa/golang-security-backend/internal/store"
-	"github.com/tobigiwa/golang-security-backend/pkg/logging"
+	"github.com/tobigiwa/golang-security-backend/logging"
 	"golang.org/x/crypto/bcrypt"
 )
 

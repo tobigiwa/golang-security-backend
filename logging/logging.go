@@ -64,11 +64,13 @@ func (l *Logger) LogInfo(message, source string) {
 
 func (l *Logger) LogError(err error, source string) {
 	l.log(LevelError, err.Error(), source)
+	panic(err)
 }
 
+// LogFatal panics with the given error
 func (l *Logger) LogFatal(err error, source string) {
 	l.log(LevelFatal, err.Error(), source)
-	os.Exit(1)
+	panic(err)
 }
 
 func (l *Logger) log(level LogLevel, message, source string) (int, error) {

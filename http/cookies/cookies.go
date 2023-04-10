@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	ErrCookieValueTooLong  = errors.New("cookie value too long")
-	ErrCookieValueInvalide = errors.New("invalid cookie value")
-	ErrInvalidValue        = errors.New("invalid cookie value")
+	ErrCookieValueTooLong = errors.New("cookie value too long")
+	ErrCookieValueInvalid = errors.New("invalid cookie value")
+	ErrInvalidValue       = errors.New("invalid cookie value")
 )
 
 func EncodeCookieValue(w http.ResponseWriter, cookie http.Cookie) error {
@@ -27,14 +27,14 @@ func EncodeCookieValue(w http.ResponseWriter, cookie http.Cookie) error {
 	return nil
 }
 
-func DecodeCookieValue(r *http.Request, name string) (string, error) {
-	cookie, err := r.Cookie(name)
+func DecodeCookieValue(r *http.Request) (string, error) {
+	cookie, err := r.Cookie("cookie")
 	if err != nil {
 		return "", err
 	}
 	value, err := base64.URLEncoding.DecodeString(cookie.Value)
 	if err != nil {
-		return "", ErrCookieValueInvalide
+		return "", ErrCookieValueInvalid
 	}
 	return string(value), nil
 }
@@ -59,8 +59,8 @@ func WriteEncryptCookie(w http.ResponseWriter, cookie http.Cookie, secretKey []b
 
 	return EncodeCookieValue(w, cookie)
 }
-func ReadEncryptedCookie(r *http.Request, name string, secretKey []byte) (string, error) {
-	encryptedValue, err := DecodeCookieValue(r, name)
+func ReadEncryptedCookie(r *http.Request, secretKey []byte) (string, error) {
+	encryptedValue, err := DecodeCookieValue(r)
 	if err != nil {
 		return "", err
 	}
@@ -88,7 +88,7 @@ func ReadEncryptedCookie(r *http.Request, name string, secretKey []byte) (string
 	if !ok {
 		return "", ErrInvalidValue
 	}
-	if expectedName != name {
+	if expectedName != "cokkie" {
 		return "", ErrInvalidValue
 	}
 	return value, nil

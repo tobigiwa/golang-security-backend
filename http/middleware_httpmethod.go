@@ -7,6 +7,8 @@ func (a *WebApp) httpMethod(allowedMethod string, next http.Handler) http.Handle
 		if r.Method != allowedMethod {
 			w.Header().Set("Allow", allowedMethod)
 			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+			return
 		}
+		next.ServeHTTP(w, r)
 	})
 }
