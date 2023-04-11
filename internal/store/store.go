@@ -53,7 +53,7 @@ func (s *Store) FetchUser(search string) (UserModel, error) {
 	defer cancel()
 	user, err := s.fetchUser(ctx, s.User.fetchUser(), search)
 	if err != nil {
-		return UserModel{}, err
+		return user, err
 	}
 	return user, nil
 }
@@ -63,6 +63,10 @@ func (s *Store) FetchAllUser() ([]UserModel, error) {
 	defer cancel()
 	users, err := s.fetchAllUser(ctx, s.User.fetchAllUser())
 	return users, err
+}
+
+func (s *Store) ValidateUserCredentials(user UserModel, password string) error {
+	return s.User.validateUser(user, password)
 }
 
 // PRIVATE API
@@ -95,10 +99,13 @@ func (s *Store) insertUser(ctx context.Context, stmt, email, username, hashedPas
 	if err != nil {
 		var pgxError *pgconn.PgError
 		if errors.As(err, &pgxError) {
-			if pgxError.Code == "23505" && strings.Contains(pgxError.Detail, email) {
-				return ErrDuplicateEmail
-			} else if pgxError.Code == "23505" && strings.Contains(pgxError.Detail, username) {
-				return ErrDuplicateUsername
+			if pgxError.Code == "23505" {
+				switch {
+				case strings.Contains(pgxError.Detail, email):
+					return ErrDuplicateEmail
+				case strings.Contains(pgxError.Detail, username):
+					return ErrDuplicateUsername
+				}
 			} else {
 				s.Logger.LogError(err, "DB")
 				return err
@@ -113,10 +120,7 @@ func (s *Store) fetchUser(ctx context.Context, stmt, search string) (UserModel, 
 	err := s.DB.QueryRow(ctx, stmt, search).Scan(&user.Username, &user.Password, &user.Role)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return UserModel{}, ErrInvalidCredentials
-		} else {
-			s.Logger.LogError(err, "DB")
-			return UserModel{}, err
+			return UserModel{}, ErrNotFound
 		}
 	}
 	return user, nil

@@ -26,11 +26,11 @@ func EncodeCookieValue(w http.ResponseWriter, cookie http.Cookie) error {
 	http.SetCookie(w, &cookie)
 	return nil
 }
-
+//DecodeCookieValue returns a string of the decode cookie value or error
 func DecodeCookieValue(r *http.Request) (string, error) {
 	cookie, err := r.Cookie("cookie")
 	if err != nil {
-		return "", err
+		return "", http.ErrNoCookie
 	}
 	value, err := base64.URLEncoding.DecodeString(cookie.Value)
 	if err != nil {

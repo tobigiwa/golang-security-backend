@@ -13,13 +13,17 @@ type UserModel struct {
 	Role     string
 }
 
-func (u *UserModel) validatePassword(email, password string) error {
+func (u *UserModel) validateUser(user UserModel, password string) error {
 	err := bcrypt.CompareHashAndPassword(u.Password, []byte(password))
-	if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-		return ErrInvalidUserCredentials
-	} else {
-		return err
+	if err != nil {
+		switch {
+		case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
+			return ErrInvalidUserCredentials
+		default:
+			return err
+		}
 	}
+	return nil
 }
 
 func (u *UserModel) generateHashedPassword(password string) ([]byte, error) {

@@ -11,7 +11,7 @@ import (
 type UserResponseModel struct {
 	Email    string
 	Username string
-	Status   string
+	Role     string
 }
 
 func (a *WebApp) SerializeUserModel(user *store.UserModel) bytes.Buffer {
@@ -19,7 +19,7 @@ func (a *WebApp) SerializeUserModel(user *store.UserModel) bytes.Buffer {
 	response := UserResponseModel{
 		Email:    user.Email,
 		Username: user.Username,
-		Status:   user.Role,
+		Role:     user.Role,
 	}
 	err := gob.NewEncoder(&buf).Encode(&response)
 	if err != nil {

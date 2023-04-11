@@ -12,4 +12,5 @@ var (
 	ErrIncompleteDatabaseCredentials = errors.New("incomplete database credentials")
 	ErrLoadingEnvFile                = errors.New("cannot load .env file")
 	ErrInvalidUserCredentials        = errors.New("invalid user credentials")
+	ErrNotFound                      = errors.New("resource not found")
 )

@@ -7,14 +7,14 @@ func (a *WebApp) Routes() http.Handler {
 
 	Login := http.HandlerFunc(a.Login)
 	Welcome := http.HandlerFunc(a.Welcome)
-	Signup := http.HandlerFunc(a.Signup)
+	createUser := http.HandlerFunc(a.CreateUser)
 
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", a.Home)
-	mux.Handle("/signup", a.httpMethod(http.MethodPost, Signup))
-	mux.Handle("/login", a.httpMethod(http.MethodPost, a.authenticationBackend(Login)))
 	mux.Handle("/welcome", a.httpMethod(http.MethodGet, a.AuthorizationBackend(Welcome)))
+	mux.Handle("/login", a.httpMethod(http.MethodPost, a.authenticationBackend(Login)))
+	mux.Handle("/createuser", a.httpMethod(http.MethodPost, createUser))
 
 	return a.recoverPanic(a.logRequest(mux))
 

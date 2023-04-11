@@ -15,24 +15,26 @@ func (a *WebApp) authenticationBackend(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		email, password := r.PostForm.Get("email"), r.PostForm.Get("password")
-		
 		user, err := a.GetUser(email, password)
 		if err != nil {
-			if errors.Is(err, errInvalidCredentials) {
-				a.ClientError(w, http.StatusForbidden, http.StatusText(http.StatusForbidden))
-				return
-			} else {
-				a.ServerError(w, err.Error())
-				a.Logger.LogError(err, "APP")
+			if errors.Is(err, store.ErrNotFound) {
+				a.ClientError(w, http.StatusNotFound, http.StatusText(http.StatusNotFound))
 				return
 			}
 		}
+		err = a.Store.ValidateUserCredentials(user, password)
+		if err != nil {
+			a.ClientError(w, http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+			return
+		}
 		response := a.SerializeUserModel(&user)
+
 		err = a.CreateCookie(w, response.String())
 		if err != nil {
 			a.ServerError(w, err.Error())
 			a.Logger.LogError(err, "APP")
 		}
+
 		next.ServeHTTP(w, r)
 	})
 }
@@ -40,11 +42,7 @@ func (a *WebApp) authenticationBackend(next http.Handler) http.Handler {
 func (a *WebApp) GetUser(email, password string) (store.UserModel, error) {
 	user, err := a.Store.FetchUser(email)
 	if err != nil {
-		if errors.Is(err, errInvalidCredentials) {
-			return store.UserModel{}, errInvalidCredentials
-		} else {
-			return store.UserModel{}, err
-		}
+		return user, err
 	}
 	return user, nil
 
@@ -72,7 +70,6 @@ func (a *WebApp) CreateCookie(w http.ResponseWriter, payload string) error {
 	}
 	return nil
 }
-
 
 // if email == "" || password == "" {
 // 	a.ClientError(w, http.StatusBadRequest, "incomplete form data")
