@@ -1,4 +1,4 @@
-package store
+package service
 
 import (
 	"context"
@@ -48,16 +48,6 @@ func (s *Store) CreateUser(email, username, password string) error {
 	return nil
 }
 
-func (s *Store) FetchUser(search string) (UserModel, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	user, err := s.fetchUser(ctx, s.User.fetchUser(), search)
-	if err != nil {
-		return user, err
-	}
-	return user, nil
-}
-
 func (s *Store) FetchAllUser() ([]UserModel, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -65,8 +55,16 @@ func (s *Store) FetchAllUser() ([]UserModel, error) {
 	return users, err
 }
 
-func (s *Store) ValidateUserCredentials(user UserModel, password string) error {
-	return s.User.validateUser(user, password)
+func (s *Store) GetAndValidateUser(ctx context.Context, key, password string) (UserModel, error) {
+	user, err := s.fetchUser(ctx, s.User.fetchUser(), key)
+	if err != nil {
+		return user, err
+	}
+	err = s.User.validatePassword(user.Password, password)
+	if err != nil {
+		return user, err
+	}
+	return user, nil
 }
 
 // PRIVATE API
@@ -81,7 +79,7 @@ func (s *Store) fetchAllUser(ctx context.Context, stmt string) ([]UserModel, err
 
 	for rows.Next() {
 		var r UserModel
-		err := rows.Scan(&r.Email, &r.Username, &r.Role)
+		err := rows.Scan(&r.Email, &r.Username, &r.Status)
 		if err != nil {
 			// do something
 			continue
@@ -117,12 +115,15 @@ func (s *Store) insertUser(ctx context.Context, stmt, email, username, hashedPas
 
 func (s *Store) fetchUser(ctx context.Context, stmt, search string) (UserModel, error) {
 	var user UserModel
-	err := s.DB.QueryRow(ctx, stmt, search).Scan(&user.Username, &user.Password, &user.Role)
+	err := s.DB.QueryRow(ctx, stmt, search).Scan(&user.Email, &user.Username, &user.Password, &user.Status)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
 			return UserModel{}, ErrNotFound
+		default:
+			s.Logger.LogError(err, "SERVICE")
+			return UserModel{}, err
 		}
 	}
 	return user, nil
-
 }

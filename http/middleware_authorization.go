@@ -21,12 +21,13 @@ func (a *WebApp) AuthorizationBackend(next http.Handler) http.Handler {
 
 		value, err := a.retieveUserFromCookie(w, r, "cookie")
 		if err != nil {
-			a.Logger.LogFatal(err, "APP")
+			a.Logger.LogError(err, "APP")
+			return
 		}
 		user := a.DeserializeUserModel(value)
 
 		fmt.Printf("\nUSER IS %T\n", user)
-		fmt.Print(user.Email, "----", user.Username, "----", user.Role, "\n\n")
+		fmt.Print(user.Email, "----", user.Username, "----", user.Status, "\n\n")
 
 		http.SetCookie(w, cookie)
 		next.ServeHTTP(w, r)
@@ -37,7 +38,7 @@ func (a *WebApp) AuthorizationBackend(next http.Handler) http.Handler {
 func (a *WebApp) retieveUserFromCookie(w http.ResponseWriter, r *http.Request, key string) (string, error) {
 	secretKey, err := hex.DecodeString("13d6b4dff8f84a10851021ec8608f814570d562c92fe6b5ec4c9f595bcb3234b")
 	if err != nil {
-		a.Logger.LogFatal(err, "APP")
+		a.Logger.LogError(err, "APP")
 	}
 	value, err := cookies.ReadEncryptedCookie(r, secretKey)
 	if err != nil {

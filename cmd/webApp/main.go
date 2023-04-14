@@ -9,13 +9,13 @@ import (
 	"time"
 
 	app "github.com/tobigiwa/golang-security-backend/http"
-	"github.com/tobigiwa/golang-security-backend/internal/store"
+	"github.com/tobigiwa/golang-security-backend/internal/service"
 	"github.com/tobigiwa/golang-security-backend/logging"
 )
 
 func main() {
 
-	db, err := store.NewDatabaseConn()
+	db, err := service.NewDatabaseConn()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -27,8 +27,8 @@ func main() {
 		}
 	}
 	application := &app.WebApp{
-		Store:  &store.Store{DB: db, Logger: logger, User: &store.UserModel{}},
-		Logger: logger,
+		Service: &service.Store{DB: db, Logger: logger, User: &service.UserModel{}},
+		Logger:  logger,
 	}
 	webServer := &http.Server{
 		Addr:         ":5030",

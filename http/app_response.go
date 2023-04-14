@@ -5,21 +5,21 @@ import (
 	"encoding/gob"
 	"strings"
 
-	"github.com/tobigiwa/golang-security-backend/internal/store"
+	"github.com/tobigiwa/golang-security-backend/internal/service"
 )
 
 type UserResponseModel struct {
 	Email    string
 	Username string
-	Role     string
+	Status   string
 }
 
-func (a *WebApp) SerializeUserModel(user *store.UserModel) bytes.Buffer {
+func (a *WebApp) SerializeUserModel(user *service.UserModel) bytes.Buffer {
 	var buf bytes.Buffer
 	response := UserResponseModel{
 		Email:    user.Email,
 		Username: user.Username,
-		Role:     user.Role,
+		Status:   user.Status,
 	}
 	err := gob.NewEncoder(&buf).Encode(&response)
 	if err != nil {

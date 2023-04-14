@@ -8,21 +8,14 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-func (a *WebApp) formValidator(next http.Handler) http.Handler {
+func (a *WebApp) FormValidator(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		err := r.ParseForm()
 		if err != nil {
 			a.ClientError(w, http.StatusBadRequest, "invalid form data")
 			return
 		}
-		email, username, password := r.PostForm.Get("email"), r.PostForm.Get("username"), r.PostForm.Get("password")
-		u := UserValidator{
-			Email:    email,
-			Username: username,
-			Password: password,
-		}
-		Validate(u)
+
 		next.ServeHTTP(w, r)
 	})
 }
@@ -72,3 +65,11 @@ func Validate(data UserValidator) {
 		}
 	}
 }
+
+// email, username, password := r.PostForm.Get("email"), r.PostForm.Get("username"), r.PostForm.Get("password")
+// u := UserValidator{
+// 	Email:    email,
+// 	Username: username,
+// 	Password: password,
+// }
+// Validate(u)

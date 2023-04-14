@@ -13,9 +13,9 @@ func (a *WebApp) Routes() http.Handler {
 
 	mux.HandleFunc("/", a.Home)
 	mux.Handle("/welcome", a.httpMethod(http.MethodGet, a.AuthorizationBackend(Welcome)))
-	mux.Handle("/login", a.httpMethod(http.MethodPost, a.authenticationBackend(Login)))
+	mux.Handle("/login", a.httpMethod(http.MethodPost, a.FormValidator(Login)))
 	mux.Handle("/createuser", a.httpMethod(http.MethodPost, createUser))
 
 	return a.recoverPanic(a.logRequest(mux))
 
-}
+}		
